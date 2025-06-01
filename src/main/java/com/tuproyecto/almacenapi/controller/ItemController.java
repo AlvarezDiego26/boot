@@ -1,60 +1,45 @@
 package com.tuproyecto.almacenapi.controller;
 
-import com.tuproyecto.almacenapi.entity.Item;
+import com.tuproyecto.almacenapi.dto.ItemDto;
 import com.tuproyecto.almacenapi.service.ItemService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/items")
-@RequiredArgsConstructor
 public class ItemController {
-
-    private final ItemService itemService;
+    @Autowired
+    private ItemService itemService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('USER','ADMIN')")
-    public ResponseEntity<List<Item>> getAll() {
-        return ResponseEntity.ok(itemService.getAll());
+    public List<ItemDto> getAll() {
+        return itemService.getAllItems();
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('USER','ADMIN')")
-    public ResponseEntity<Item> getById(@PathVariable Long id) {
-        return itemService.getById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ItemDto> getById(@PathVariable Long id) {
+        ItemDto dto = itemService.getItemById(id);
+        return ResponseEntity.ok(dto);
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Item> create(@RequestBody Item item) {
-        return ResponseEntity.ok(itemService.save(item));
+    public ResponseEntity<ItemDto> create(@RequestBody ItemDto dto) {
+        ItemDto created = itemService.createItem(dto);
+        return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Item> update(@PathVariable Long id, @RequestBody Item item) {
-        return itemService.getById(id).map(existing -> {
-            existing.setNombre(item.getNombre());
-            existing.setDescripcion(item.getDescripcion());
-            existing.setPrecio(item.getPrecio());
-            Item updated = itemService.save(existing);
-            return ResponseEntity.ok(updated);
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ItemDto> update(@PathVariable Long id, @RequestBody ItemDto dto) {
+        ItemDto updated = itemService.updateItem(id, dto);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (itemService.getById(id).isPresent()) {
-            itemService.delete(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+        itemService.deleteItem(id);
+        return ResponseEntity.noContent().build();
     }
 }

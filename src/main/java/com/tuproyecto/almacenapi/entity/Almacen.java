@@ -7,18 +7,18 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "items")
+@Table(name = "almacenes")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Item {
+public class Almacen {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nombre;
+    private String ubicacion;
 
     // Relación con ItemAlmacen
-    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "almacen", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ItemAlmacen> itemAlmacenes = new HashSet<>();
 }
