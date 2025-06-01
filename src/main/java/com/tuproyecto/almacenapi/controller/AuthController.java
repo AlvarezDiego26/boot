@@ -4,7 +4,6 @@ import com.tuproyecto.almacenapi.dto.RegisterRequest;
 import com.tuproyecto.almacenapi.dto.LoginRequest;
 import com.tuproyecto.almacenapi.dto.LoginResponse;
 import com.tuproyecto.almacenapi.service.AuthService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,17 +15,19 @@ public class AuthController {
 
     private final AuthService authService;
 
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest request) {
+        try {
+            authService.register(request);
+            return ResponseEntity.ok("Usuario registrado correctamente");
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
         LoginResponse response = authService.login(request);
         return ResponseEntity.ok(response);
-
     }
-
-    @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
-        authService.register(request);
-        return ResponseEntity.ok("Usuario registrado exitosamente");
-    }
-
 }

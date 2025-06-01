@@ -41,22 +41,37 @@ public class UserPrincipal implements UserDetails {
     }
 
     @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
+    }
+
+    @Override
+    public String getPassword() {
+        return password; // Retorna la contraseña encriptada
+    }
+
+    @Override
+    public String getUsername() {
+        return username; // Retorna el nombre de usuario
+    }
+
+    @Override
     public boolean isAccountNonExpired() {
-        return true;
+        return true; // Aquí puedes agregar lógica real si quieres
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return true; // Aquí puedes agregar lógica real si quieres
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true;
+        return true; // Aquí puedes agregar lógica real si quieres
     }
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return true; // Aquí puedes agregar lógica real si quieres
     }
 }

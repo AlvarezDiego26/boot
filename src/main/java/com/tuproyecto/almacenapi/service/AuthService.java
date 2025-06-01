@@ -10,18 +10,21 @@ import com.tuproyecto.almacenapi.security.JwtUtil;
 import com.tuproyecto.almacenapi.security.UserPrincipal;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.tuproyecto.almacenapi.dto.RegisterRequest;
-import jakarta.transaction.Transactional;
 import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
+    @Autowired
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -77,25 +80,25 @@ public class AuthService {
         }
     }
 
-    @Transactional
     public void register(RegisterRequest request) {
-        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+        // Verificar si el usuario ya existe
+        if (userRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("El nombre de usuario ya existe");
         }
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("El email ya está registrado");
-        }
 
-        User newUser = new User();
-        newUser.setUsername(request.getUsername());
-        newUser.setEmail(request.getEmail());
-        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setPassword(encodePassword(request.getPassword())); // Aquí codificas la contraseña
+        user.setEmail(request.getEmail());
 
-        Role userRole = roleRepository.findByName("ROLE_USER")
-                .orElseThrow(() -> new RuntimeException("Rol USER no encontrado"));
+        // Otros campos...
 
-        newUser.setRoles(Set.of(userRole));
-        userRepository.save(newUser);
+        userRepository.save(user);
+    }
+
+    private String encodePassword(String rawPassword) {
+        // Puedes usar BCryptPasswordEncoder o lo que prefieras
+        return new BCryptPasswordEncoder().encode(rawPassword);
     }
 
 }
