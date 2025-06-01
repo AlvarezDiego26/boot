@@ -14,7 +14,8 @@ import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import com.tuproyecto.almacenapi.dto.RegisterRequest;
+import jakarta.transaction.Transactional;
 import java.util.*;
 
 @Service
@@ -58,14 +59,43 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername(),
-                        loginRequest.getPassword()));
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getUsername(),
+                            loginRequest.getPassword()));
 
-        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        String token = jwtUtil.generateToken(userPrincipal);
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+            String token = jwtUtil.generateToken(userPrincipal);
 
-        return new LoginResponse(token);
+            return new LoginResponse(token);
+
+        } catch (BadCredentialsException e) {
+            throw new RuntimeException("Credenciales inválidas: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Error en login: " + e.getMessage());
+        }
     }
+
+    @Transactional
+    public void register(RegisterRequest request) {
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new RuntimeException("El nombre de usuario ya existe");
+        }
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("El email ya está registrado");
+        }
+
+        User newUser = new User();
+        newUser.setUsername(request.getUsername());
+        newUser.setEmail(request.getEmail());
+        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        Role userRole = roleRepository.findByName("ROLE_USER")
+                .orElseThrow(() -> new RuntimeException("Rol USER no encontrado"));
+
+        newUser.setRoles(Set.of(userRole));
+        userRepository.save(newUser);
+    }
+
 }
